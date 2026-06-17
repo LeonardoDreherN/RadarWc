@@ -17,6 +17,10 @@ async function getFixtures() {
   return (data ?? []).map((r) => r.data as Fixture);
 }
 
+function toBRT(date: Date) {
+  return new Date(date.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+}
+
 function isSameDay(a: Date, b: Date) {
   return a.getDate() === b.getDate() &&
     a.getMonth() === b.getMonth() &&
@@ -27,7 +31,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const { f: filter = "hoje" } = await searchParams;
   const fixtures = await getFixtures();
 
-  const now = new Date();
+  const now = toBRT(new Date());
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const weekEnd = new Date(now);
@@ -42,8 +46,8 @@ export default async function DashboardPage({ searchParams }: Props) {
       f.fixture.status.short === "NS" && new Date(f.fixture.date) > now
     ).sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
 
-    if (filter === "hoje") return upcoming.filter((f) => isSameDay(new Date(f.fixture.date), now));
-    if (filter === "amanha") return upcoming.filter((f) => isSameDay(new Date(f.fixture.date), tomorrow));
+    if (filter === "hoje") return upcoming.filter((f) => isSameDay(toBRT(new Date(f.fixture.date)), now));
+    if (filter === "amanha") return upcoming.filter((f) => isSameDay(toBRT(new Date(f.fixture.date)), tomorrow));
     if (filter === "semana") return upcoming.filter((f) => new Date(f.fixture.date) <= weekEnd);
     return upcoming.slice(0, 30);
   };
