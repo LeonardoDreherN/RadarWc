@@ -40,9 +40,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8 relative">
         {/* Logo animada */}
         <div className="flex flex-col items-center gap-4 animate-scale-in">
-          <div className="w-24 h-24 rounded-3xl overflow-hidden ring-2 ring-green-500/40 shadow-2xl shadow-green-900/50">
-            <Image src="/icons/icon-192.png" alt="RadarWC" width={96} height={96} className="object-cover" />
-          </div>
+          <Image src="/icons/icon-512.png" alt="RadarWC" width={96} height={96} className="object-contain drop-shadow-2xl" />
           <div className="text-center">
             <h1 className="text-3xl font-black text-white tracking-tight">RadarWC</h1>
             <p className="text-green-400 text-sm font-semibold mt-0.5">FIFA World Cup 2026</p>
