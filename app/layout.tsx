@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   description: "Análise inteligente para apostas na Copa do Mundo 2026",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icons/icon-192.png",
-    apple: "/icons/icon-192.png",
-    shortcut: "/icons/icon-192.png",
+    icon: "/icons/app.png",
+    apple: "/icons/app.png",
+    shortcut: "/icons/app.png",
   },
   appleWebApp: {
     capable: true,
