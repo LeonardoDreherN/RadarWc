@@ -39,13 +39,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm space-y-8 relative">
         {/* Logo animada */}
-        <div className="flex flex-col items-center gap-4 animate-scale-in">
-          <Image src="/icons/icon-512.png" alt="RadarWC" width={96} height={96} className="object-contain drop-shadow-2xl" />
-          <div className="text-center">
-            <h1 className="text-3xl font-black text-white tracking-tight">RadarWC</h1>
-            <p className="text-green-400 text-sm font-semibold mt-0.5">FIFA World Cup 2026</p>
-            <p className="text-zinc-500 text-xs mt-1">Análise inteligente para apostadores</p>
-          </div>
+        <div className="flex flex-col items-center animate-scale-in">
+          <Image src="/icons/icon-512.png" alt="RadarWC" width={160} height={160} className="object-contain drop-shadow-2xl" />
         </div>
 
         {/* Card do form */}
