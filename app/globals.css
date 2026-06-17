@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-geist: "Geist", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* { box-sizing: border-box; }
+
+body { font-family: var(--font-geist); }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Fundo de campo de futebol ───────────────────────────────────────────── */
+.field-bg {
+  background-color: #0a1a0c;
+  background-image:
+    /* centro do campo — círculo */
+    radial-gradient(circle at 50% 52%, transparent 17%, rgba(255,255,255,0.06) 17%, rgba(255,255,255,0.06) 17.5%, transparent 17.5%),
+    /* linha central vertical */
+    linear-gradient(90deg, transparent 49.85%, rgba(255,255,255,0.06) 49.85%, rgba(255,255,255,0.06) 50.15%, transparent 50.15%),
+    /* faixas de grama horizontais */
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 1px,
+      transparent 1px,
+      transparent 72px
+    ),
+    /* gradiente de profundidade */
+    radial-gradient(ellipse 120% 80% at 50% 0%, #163d1c 0%, #0a1a0c 70%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Animações de entrada ────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.82); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+
+.delay-100 { animation-delay: 0.10s; }
+.delay-200 { animation-delay: 0.20s; }
+.delay-300 { animation-delay: 0.32s; }
+.delay-400 { animation-delay: 0.44s; }
+
+/* ── Placar pulsando (ao vivo) ───────────────────────────────────────────── */
+@keyframes scorePulse {
+  0%, 100% { text-shadow: 0 0 0px rgba(74, 222, 128, 0); }
+  50%       { text-shadow: 0 0 12px rgba(74, 222, 128, 0.7); }
+}
+
+.score-pulse {
+  animation: scorePulse 2s ease-in-out infinite;
+}
+
+/* ── Skeleton shimmer ────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── Transição de página ─────────────────────────────────────────────────── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-transition {
+  animation: pageIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Pull to refresh ─────────────────────────────────────────────────────── */
+@keyframes spinAround {
+  to { transform: rotate(360deg); }
+}
+
+.ptr-spin {
+  animation: spinAround 0.8s linear infinite;
 }
