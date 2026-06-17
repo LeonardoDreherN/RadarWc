@@ -132,7 +132,6 @@ export default async function JogoPage({ params }: Props) {
   });
 
   const aiGroups = aiAnalysis ? byRisk(aiAnalysis.labels) : null;
-  const histGroups = historicalAnalysis ? byRisk(historicalAnalysis.labels) : null;
 
   return (
     <div className="space-y-5">
@@ -209,19 +208,6 @@ export default async function JogoPage({ params }: Props) {
           </div>
         )}
       </div>
-
-      {/* Seção 2 — Histórico */}
-      {histGroups && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold text-white uppercase tracking-widest">Histórico Recente</h2>
-          <div className="space-y-4">
-            <RiskSection title="Tendência" color="text-green-400" labels={histGroups.baixo} />
-            <RiskSection title="Médio Risco" color="text-yellow-400" labels={histGroups.medio} />
-            <RiskSection title="Alto Risco" color="text-orange-400" labels={histGroups.alto} />
-            <RiskSection title="Não Apostar" color="text-zinc-500" labels={histGroups.nao_apostar} muted />
-          </div>
-        </div>
-      )}
 
       {/* H2H */}
       <div className="space-y-2">
