@@ -39,7 +39,7 @@ export default function SemAcessoPage() {
             {/* Preço */}
             <div>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-white">R$ 37</span>
+                <span className="text-4xl font-black text-white">R$ 17,90</span>
                 <span className="text-zinc-500 text-sm mb-1">pagamento único</span>
               </div>
               <p className="text-xs text-zinc-500 mt-1">Válido até o final da Copa do Mundo 2026</p>
@@ -70,7 +70,7 @@ export default function SemAcessoPage() {
               rel="noopener noreferrer"
               className="w-full bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-black py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-900/40 text-base"
             >
-              Comprar agora — R$ 37
+              Comprar agora — R$ 17,90
               <ExternalLink className="w-4 h-4" />
             </a>
 
