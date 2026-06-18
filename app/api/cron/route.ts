@@ -17,7 +17,21 @@ export async function GET(req: NextRequest) {
 
   // Merge: jogos ao vivo sobrescrevem o placar nos dados gerais
   const liveMap = new Map(live.map((f) => [f.fixture.id, f]));
-  const merged = all.map((f) => liveMap.get(f.fixture.id) ?? f);
+
+  // Se um jogo aparece como ativo no endpoint geral mas NÃO está na lista de live,
+  // o endpoint geral está desatualizado — força status como encerrado
+  const ACTIVE = ["1H", "HT", "ET", "P"];
+  const merged = all.map((f) => {
+    const liveVersion = liveMap.get(f.fixture.id);
+    if (liveVersion) return liveVersion;
+    if (ACTIVE.includes(f.fixture.status.short)) {
+      return {
+        ...f,
+        fixture: { ...f.fixture, status: { short: "FT", elapsed: null } },
+      };
+    }
+    return f;
+  });
 
   await Promise.all(
     merged.map((f) =>
