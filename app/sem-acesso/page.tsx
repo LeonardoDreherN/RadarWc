@@ -1,10 +1,21 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ExternalLink, Check, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const KIWIFY_URL = process.env.NEXT_PUBLIC_KIWIFY_URL ?? "#";
 
 export default function SemAcessoPage() {
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase().auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
+    });
+  }, []);
   return (
     <div className="field-bg min-h-screen flex flex-col items-center justify-center px-4 py-10">
       <div className="pointer-events-none fixed inset-0 bg-zinc-950/75" />
@@ -68,9 +79,10 @@ export default function SemAcessoPage() {
               <ExternalLink className="w-4 h-4" />
             </a>
 
-            <p className="text-[11px] text-zinc-600 text-center">
-              Use o mesmo e-mail do cadastro no checkout
-            </p>
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-center space-y-1">
+              <p className="text-[11px] text-yellow-400 font-bold uppercase tracking-wide">⚠ Use este e-mail no checkout</p>
+              <p className="text-sm text-white font-mono break-all">{email ?? "carregando..."}</p>
+            </div>
           </div>
         </div>
 
