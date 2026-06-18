@@ -13,13 +13,13 @@ export async function POST(req: NextRequest) {
   const signature = req.nextUrl.searchParams.get("signature") ?? "";
 
   if (!verifySignature(rawBody, signature)) {
+    console.error("Kiwify webhook: assinatura inválida");
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   const payload = JSON.parse(rawBody);
   const db = supabaseAdmin();
 
-  // Loga o evento sempre
   await db.from("kiwify_events").insert({
     event_type: payload.order_status,
     order_id: payload.order_id,
@@ -27,26 +27,30 @@ export async function POST(req: NextRequest) {
     payload,
   });
 
-  // Libera acesso apenas em compra aprovada
+  // Libera acesso em compra aprovada
   if (payload.order_status === "paid") {
     const email = payload.Customer?.email;
     if (!email) {
+      console.error("Kiwify webhook: email não encontrado no payload", payload);
       return NextResponse.json({ error: "No email" }, { status: 400 });
     }
 
-    // Atualiza perfil — o trigger já criou o perfil na hora do cadastro
-    const { error } = await db
+    const { data, error } = await db
       .from("profiles")
       .update({
         has_access: true,
         kiwify_order_id: payload.order_id,
         access_granted_at: new Date().toISOString(),
       })
-      .eq("email", email);
+      .eq("email", email)
+      .select("id, email, has_access");
 
     if (error) {
-      // Usuário ainda não se cadastrou — salva acesso pendente para quando ele se registrar
-      console.error("Kiwify webhook: perfil não encontrado para", email, error);
+      console.error("Kiwify webhook: erro ao atualizar perfil", { email, error });
+    } else if (!data || data.length === 0) {
+      console.error("Kiwify webhook: nenhum perfil encontrado para", email, "— acesso pendente");
+    } else {
+      console.log("Kiwify webhook: acesso liberado para", email, data);
     }
   }
 
@@ -54,10 +58,14 @@ export async function POST(req: NextRequest) {
   if (["refunded", "chargedback"].includes(payload.order_status)) {
     const email = payload.Customer?.email;
     if (email) {
-      await db
+      const { error } = await db
         .from("profiles")
         .update({ has_access: false })
         .eq("email", email);
+
+      if (error) {
+        console.error("Kiwify webhook: erro ao revogar acesso", { email, error });
+      }
     }
   }
 
