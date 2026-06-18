@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { MatchDateTime } from "@/components/MatchDateTime";
 import { supabaseAdmin } from "@/lib/supabase";
 import { BetLabel } from "@/components/BetLabel";
 import { H2HStats } from "@/components/H2HStats";
@@ -120,7 +119,6 @@ export default async function JogoPage({ params }: Props) {
   if (!fixture) notFound();
   const { aiAnalysis, historicalAnalysis, oddImplied, h2hSummary } = await buildAnalysis(fixture);
 
-  const date = new Date(fixture.fixture.date);
   const isLive = ["1H", "HT", "2H", "ET", "P"].includes(fixture.fixture.status.short);
   const isFinished = ["FT", "AET", "PEN"].includes(fixture.fixture.status.short);
 
@@ -149,7 +147,7 @@ export default async function JogoPage({ params }: Props) {
               AO VIVO {fixture.fixture.status.elapsed ? `${fixture.fixture.status.elapsed}'` : ""}
             </span>
           ) : (
-            <span>{format(date, "dd 'de' MMMM · HH'h'mm", { locale: ptBR })}</span>
+            <MatchDateTime isoDate={fixture.fixture.date} />
           )}
         </div>
 
