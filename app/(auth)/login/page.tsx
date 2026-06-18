@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,6 +14,22 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Tenta restaurar sessão do localStorage (iOS PWA não persiste cookies)
+  useEffect(() => {
+    const key = Object.keys(localStorage).find((k) => k.startsWith("_sb_sb-"));
+    if (!key) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(key)!);
+      if (!stored?.access_token || !stored?.refresh_token) return;
+      supabase().auth.setSession({
+        access_token: stored.access_token,
+        refresh_token: stored.refresh_token,
+      }).then(({ data }) => {
+        if (data.session) router.replace("/dashboard");
+      });
+    } catch {}
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
