@@ -13,9 +13,7 @@ export default function LandingPage() {
       <div className="w-full max-w-sm space-y-8 relative">
         {/* Logo + título */}
         <div className="flex flex-col items-center text-center gap-2">
-          <Image src="/icons/icon-512.png" alt="RadarWC" width={120} height={120} className="object-contain drop-shadow-2xl" />
-          <h1 className="text-4xl font-black text-white tracking-tight mt-2">RadarWC</h1>
-          <p className="text-green-400 font-semibold text-sm">FIFA World Cup 2026</p>
+          <Image src="/icons/icon-512.png" alt="RadarWC" width={180} height={180} className="object-contain drop-shadow-2xl" />
           <p className="text-zinc-400 text-sm max-w-xs mt-1">
             Análise inteligente para apostadores. Veja tendências, riscos e estatísticas de cada jogo da Copa.
           </p>
