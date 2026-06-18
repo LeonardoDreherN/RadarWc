@@ -5,7 +5,7 @@ import { DashboardTabs } from "@/components/DashboardTabs";
 import type { Fixture } from "@/lib/football-api";
 import { Radio, Calendar, Clock } from "lucide-react";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 interface Props {
   searchParams: Promise<{ f?: string }>;
@@ -123,7 +123,7 @@ function Section({
           {count}
         </span>
       </div>
-      <div className="space-y-2.5">{children}</div>
+      <div className="space-y-4">{children}</div>
     </section>
   );
 }
