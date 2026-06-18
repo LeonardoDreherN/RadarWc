@@ -6,7 +6,13 @@ const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 // Cliente browser — usa cookies via @supabase/ssr para que o proxy consiga ler a sessão
 export function supabase() {
-  return createBrowserClient(url, anon);
+  return createBrowserClient(url, anon, {
+    cookieOptions: {
+      maxAge: 60 * 60 * 24 * 365, // 1 ano — evita logout ao fechar o app
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
+  });
 }
 
 // Cliente servidor — usa service role, sem cookies

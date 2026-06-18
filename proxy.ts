@@ -29,7 +29,12 @@ export async function proxy(req: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             req.cookies.set(name, value);
-            res.cookies.set(name, value, options);
+            res.cookies.set(name, value, {
+              ...options,
+              maxAge: 60 * 60 * 24 * 365,
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+            });
           });
         },
       },
