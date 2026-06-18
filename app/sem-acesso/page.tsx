@@ -15,13 +15,7 @@ export default function SemAcessoPage() {
       <div className="w-full max-w-sm space-y-6 relative">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-green-500/30 shadow-lg shadow-green-500/10">
-            <Image src="/icons/icon-192.png" alt="RadarWC" width={80} height={80} className="object-cover" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-white">RadarWC</h1>
-            <p className="text-zinc-500 text-sm mt-1">Análise inteligente para apostadores</p>
-          </div>
+          <Image src="/icons/icon-512.png" alt="RadarWC" width={120} height={120} className="object-contain drop-shadow-2xl" />
         </div>
 
         {/* Card de compra */}
