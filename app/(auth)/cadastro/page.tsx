@@ -36,15 +36,8 @@ export default function CadastroPage() {
       </div>
 
       <div className="w-full max-w-sm space-y-8 relative">
-        <div className="flex flex-col items-center gap-4 animate-scale-in">
-          <div className="w-24 h-24 rounded-3xl overflow-hidden ring-2 ring-green-500/40 shadow-2xl shadow-green-900/50">
-            <Image src="/icons/icon-192.png" alt="RadarWC" width={96} height={96} className="object-cover" />
-          </div>
-          <div className="text-center">
-            <h1 className="text-3xl font-black text-white tracking-tight">Criar conta</h1>
-            <p className="text-green-400 text-sm font-semibold mt-0.5">FIFA World Cup 2026</p>
-            <p className="text-zinc-500 text-xs mt-1">Acesso completo após a compra</p>
-          </div>
+        <div className="flex flex-col items-center animate-scale-in">
+          <Image src="/icons/icon-512.png" alt="RadarWC" width={160} height={160} className="object-contain drop-shadow-2xl" />
         </div>
 
         <div className="bg-zinc-900/80 backdrop-blur border border-zinc-800/80 rounded-2xl p-6 space-y-4 animate-fade-in-up delay-200">
