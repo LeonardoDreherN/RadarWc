@@ -288,7 +288,7 @@ export default function LandingPage() {
               <ul className="p-5 space-y-3">
                 {[
                   "Análise completa de todos os jogos da Copa 2026",
-                  "Mercados: gols, cartões, escanteios e resultado",
+                  "Mercados: gols, cartões, escanteios, resultado e muito mais",
                   "Risco classificado: baixo, médio e alto",
                   "Confronto direto (H2H) completo",
                   "Placar ao vivo com atualização automática",
