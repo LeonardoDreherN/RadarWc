@@ -20,25 +20,26 @@ ${isKnockout ? `- É jogo ELIMINATÓRIO. Ambas as equipes jogam com tudo, sem po
 ${isGroupStage ? `- É jogo de FASE DE GRUPOS. Dependendo da situação na tabela, um time pode já estar classificado ou precisar vencer para avançar. Considere o nível de motivação de cada equipe.` : ""}
 - Fase: ${phase}
 
-MERCADOS DISPONÍVEIS (escolha de 7 a 10 que fazem mais sentido para ESTE jogo específico):
+MERCADOS OBRIGATÓRIOS (analise TODOS os 6 sempre):
 1. Gols no Jogo: "Mais de 2.5 Gols" ou "Menos de 2.5 Gols"
-2. Ambas Marcam: "Sim" ou "Não"
-3. Gol no 1° Tempo: "Provável" ou "Improvável"
-4. Resultado Final: quem vence ou empate (ex: "${home} vence" ou "Empate provável")
-5. Escanteios: "Mais de 9.5" ou "Menos de 9.5"
-6. Cartões: "Mais de 3.5" ou "Menos de 3.5"
-7. Handicap Asiático: qual time tem vantagem e por quê
-8. Vencedor do 1° Tempo: quem deve abrir o placar ou empate no intervalo
-9. Clean Sheet: "${home} não sofre gol" ou "${away} não sofre gol"
-10. Gols do ${home}: "Mais de 1.5" ou "Menos de 1.5"
-11. Gols do ${away}: "Mais de 1.5" ou "Menos de 1.5"
-12. Primeiro a Marcar: qual equipe tende a marcar primeiro
-13. Mais de 1.5 Gols: se o jogo tende a ter pelo menos 2 gols
-14. Resultado ao Intervalo/Final: combinação de resultado no intervalo e no final
-15. Empate na partida: probabilidade real de empate neste confronto específico
+2. Ambas Marcam: "Sim — Ambas as equipes marcam" ou "Não — Pelo menos uma não marca"
+3. Gol no 1° Tempo: "Gol antes do intervalo — Provável" ou "Sem gol no 1° tempo — Mais provável"
+4. Resultado Final: quem é favorito (ex: "${home} favorito ao triunfo", "Empate provável")
+5. Escanteios: "Mais de 9.5 escanteios" ou "Menos de 9.5 escanteios"
+6. Cartões: "Mais de 3.5 cartões" ou "Menos de 3.5 cartões"
+
+MERCADOS EXTRAS (escolha de 2 a 4 que fazem sentido para ESTE jogo específico e adicione após os obrigatórios):
+- Handicap Asiático: qual time tem vantagem clara
+- Vencedor do 1° Tempo: quem lidera no intervalo
+- Clean Sheet: "${home} não sofre gol" ou "${away} não sofre gol"
+- Primeiro a Marcar: qual equipe tende a abrir o placar
+- Mais de 1.5 Gols: jogo tende a ter pelo menos 2 gols
+- Gols do ${home}: "Mais de 1.5" ou "Menos de 1.5"
+- Gols do ${away}: "Mais de 1.5" ou "Menos de 1.5"
+- Empate na partida: probabilidade real de empate neste confronto
 
 INSTRUÇÕES:
-- Escolha apenas os mercados que têm análise RELEVANTE para este jogo específico. Não force todos.
+- Os 6 mercados obrigatórios DEVEM sempre aparecer no JSON, sem exceção.
 - Baseie em: ranking FIFA, estilo de jogo, histórico recente, fase da Copa, força ofensiva/defensiva conhecida de cada seleção, confrontos diretos históricos.
 - Seja ESPECÍFICO: mencione características reais de cada seleção (ex: "Brasil tem forte pressão alta", "Argentina é sólida defensivamente com Di María").
 - Classifique o risco:
