@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-const BASE = 100;
+const PLATFORM_BONUS = 100;
 const PER_USER = 1.5;
+const USER_OFFSET = 66; // base de usuários já contabilizados
+
+function fmt(value: number) {
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 export function BolaoPot({ initialCount }: { initialCount: number }) {
-  const [count, setCount] = useState(initialCount);
+  const [realCount, setRealCount] = useState(initialCount);
   const [pulse, setPulse] = useState(false);
 
   async function refetch() {
@@ -15,8 +20,8 @@ export function BolaoPot({ initialCount }: { initialCount: number }) {
       const res = await fetch("/api/bolao/pot");
       if (res.ok) {
         const { count: fresh } = await res.json();
-        if (fresh !== count) {
-          setCount(fresh);
+        if (fresh !== realCount) {
+          setRealCount(fresh);
           setPulse(true);
           setTimeout(() => setPulse(false), 1500);
         }
@@ -38,22 +43,34 @@ export function BolaoPot({ initialCount }: { initialCount: number }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pot = BASE + count * PER_USER;
-  const formatted = pot.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const displayedUsers = realCount + USER_OFFSET;
+  const userPart = displayedUsers * PER_USER;
+  const total = PLATFORM_BONUS + userPart;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
+      {/* Total */}
       <div className="flex items-baseline gap-1">
         <span className="text-xs text-yellow-400/70 font-bold">R$</span>
         <span className={`text-4xl font-black text-yellow-400 tabular-nums transition-transform duration-300 ${pulse ? "scale-110" : "scale-100"}`}>
-          {formatted}
+          {fmt(total)}
         </span>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-        <span className="text-[10px] text-zinc-500">
-          {count} assinantes · +R$1,50 por novo assinante
-        </span>
+
+      {/* Breakdown */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+          <span className="text-zinc-400">
+            <span className="font-bold text-white">R$ {fmt(userPart)}</span> de {displayedUsers} assinantes
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0" />
+          <span className="text-zinc-400">
+            <span className="font-bold text-white">R$ {fmt(PLATFORM_BONUS)}</span> bônus da plataforma
+          </span>
+        </div>
       </div>
     </div>
   );
