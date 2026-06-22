@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 const PLATFORM_BONUS = 100;
 const PER_USER = 1.5;
-const USER_OFFSET = 66; // base de usuários já contabilizados
+const USER_OFFSET = 33; // base de usuários já contabilizados
 
 function fmt(value: number) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
