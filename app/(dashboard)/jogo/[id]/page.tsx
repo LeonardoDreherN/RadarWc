@@ -5,10 +5,12 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { BetLabel } from "@/components/BetLabel";
 import { H2HStats } from "@/components/H2HStats";
 import { TeamStyleComparison } from "@/components/TeamStyleComparison";
+import { AccuracyStats } from "@/components/AccuracyStats";
+import type { AccuracyStat } from "@/lib/accuracy";
 import type { Fixture } from "@/lib/football-api";
 import {
   analyzeGoals, analyzeResult, buildH2HSummary, parseMatchOdds,
-  type MatchAnalysis, type RiskLevel, type OddImplied, type H2HSummary, type TeamStyles,
+  type MatchAnalysis, type OddImplied, type H2HSummary, type TeamStyles,
 } from "@/lib/analysis";
 import {
   getTeamFixtureHistory, getH2H, getFixtureOdds,
@@ -19,6 +21,23 @@ import Link from "next/link";
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+async function getAccuracyStats(): Promise<AccuracyStat[]> {
+  const db = supabaseAdmin();
+  const { data } = await db.from("prediction_results").select("market, correct");
+  if (!data || data.length === 0) return [];
+
+  const map = new Map<string, { correct: number; total: number }>();
+  for (const row of data as { market: string; correct: boolean }[]) {
+    const cur = map.get(row.market) ?? { correct: 0, total: 0 };
+    map.set(row.market, { correct: cur.correct + (row.correct ? 1 : 0), total: cur.total + 1 });
+  }
+
+  return Array.from(map.entries())
+    .map(([market, { correct, total }]) => ({ market, correct, total, pct: Math.round((correct / total) * 100) }))
+    .filter((s) => s.total >= 3)
+    .sort((a, b) => b.total - a.total);
 }
 
 async function getFixture(id: number): Promise<Fixture | null> {
@@ -121,7 +140,10 @@ export default async function JogoPage({ params }: Props) {
 
   const fixture = await getFixture(fixtureId);
   if (!fixture) notFound();
-  const { aiAnalysis, historicalAnalysis, oddImplied, h2hSummary, teamStyles } = await buildAnalysis(fixture);
+  const [{ aiAnalysis, oddImplied, h2hSummary, teamStyles }, accuracyStats] = await Promise.all([
+    buildAnalysis(fixture),
+    getAccuracyStats(),
+  ]);
 
   const isLive = ["1H", "HT", "2H", "ET", "P"].includes(fixture.fixture.status.short);
   const isFinished = ["FT", "AET", "PEN"].includes(fixture.fixture.status.short);
@@ -222,6 +244,13 @@ export default async function JogoPage({ params }: Props) {
           </div>
         )}
       </div>
+
+      {/* Histórico de Acertos */}
+      {accuracyStats.length > 0 && (
+        <div className="space-y-2">
+          <AccuracyStats stats={accuracyStats} />
+        </div>
+      )}
 
       {/* H2H */}
       <div className="space-y-2">
