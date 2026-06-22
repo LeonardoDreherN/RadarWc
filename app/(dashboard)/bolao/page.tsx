@@ -2,11 +2,22 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseAdmin } from "@/lib/supabase";
 import { BolaoPickCard } from "@/components/BolaoPickCard";
-import { Trophy, Medal } from "lucide-react";
+import { Trophy } from "lucide-react";
 import type { Fixture } from "@/lib/football-api";
 
 const FINISHED = ["FT", "AET", "PEN"];
 const GROUP_ROUND = "Fase de Grupos";
+
+const MEDALS = ["🥇", "🥈", "🥉"];
+
+const ROUND_ORDER = [
+  "Rodada de 32",
+  "Oitavas de Final",
+  "Quartas de Final",
+  "Semifinal",
+  "3º Lugar",
+  "Final",
+];
 
 interface BolaoRow {
   user_id: string;
@@ -45,26 +56,23 @@ export default async function BolaoPage() {
     allPicks.filter((p) => p.user_id === userId).map((p) => [p.fixture_id, p])
   );
 
-  // Leaderboard: pontua 1 por placar exato em jogos encerrados
+  // Pontuação: 1pt por placar exato
   const finishedKnockout = knockoutFixtures.filter((f) => FINISHED.includes(f.fixture.status.short));
   const scoreMap = new Map<string, number>();
-
   for (const fixture of finishedKnockout) {
-    const realHome = fixture.goals.home;
-    const realAway = fixture.goals.away;
-    if (realHome === null || realAway === null) continue;
+    const rh = fixture.goals.home, ra = fixture.goals.away;
+    if (rh === null || ra === null) continue;
     for (const pick of allPicks) {
       if (pick.fixture_id !== fixture.fixture.id) continue;
-      if (pick.home_goals === realHome && pick.away_goals === realAway) {
+      if (pick.home_goals === rh && pick.away_goals === ra) {
         scoreMap.set(pick.user_id, (scoreMap.get(pick.user_id) ?? 0) + 1);
       }
     }
   }
 
-  // Busca emails dos usuários no ranking
-  const rankedUserIds = Array.from(scoreMap.keys());
+  // Emails
   let emailMap = new Map<string, string>();
-  if (rankedUserIds.length > 0) {
+  if (scoreMap.size > 0) {
     try {
       const { data: { users } } = await db.auth.admin.listUsers({ perPage: 500 });
       emailMap = new Map(users.map((u) => [u.id, u.email?.split("@")[0] ?? "Usuário"]));
@@ -76,87 +84,130 @@ export default async function BolaoPage() {
     .sort((a, b) => b.pts - a.pts)
     .slice(0, 10);
 
-  const myRank = leaderboard.findIndex((r) => r.uid === userId) + 1;
   const myScore = scoreMap.get(userId ?? "") ?? 0;
+  const myRank = leaderboard.findIndex((r) => r.uid === userId) + 1;
+  const myPicksCount = myPicks.size;
+  const totalKnockout = knockoutFixtures.length;
 
-  // Agrupar jogos por fase
+  // Agrupar por fase
   const byRound = new Map<string, Fixture[]>();
   for (const f of knockoutFixtures) {
     const round = f.league.round || "Mata-mata";
     if (!byRound.has(round)) byRound.set(round, []);
     byRound.get(round)!.push(f);
   }
-
-  const roundOrder = ["Rodada de 32", "Oitavas de Final", "Quartas de Final", "Semifinal", "3º Lugar", "Final"];
   const sortedRounds = Array.from(byRound.keys()).sort(
-    (a, b) => (roundOrder.indexOf(a) === -1 ? 99 : roundOrder.indexOf(a)) - (roundOrder.indexOf(b) === -1 ? 99 : roundOrder.indexOf(b))
+    (a, b) =>
+      (ROUND_ORDER.indexOf(a) === -1 ? 99 : ROUND_ORDER.indexOf(a)) -
+      (ROUND_ORDER.indexOf(b) === -1 ? 99 : ROUND_ORDER.indexOf(b))
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 p-4 space-y-1">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-400" />
-          <h1 className="text-base font-black text-white">Bolão das Finais</h1>
-        </div>
-        <p className="text-xs text-zinc-400">Acerte o placar exato e ganhe <span className="text-yellow-400 font-bold">1 ponto</span> por jogo. O campeão leva o prêmio!</p>
-        {userId && myScore > 0 && (
-          <p className="text-xs text-zinc-500 pt-1">
-            Você está em <span className="text-white font-bold">{myRank}º lugar</span> com <span className="text-yellow-400 font-bold">{myScore} ponto{myScore !== 1 ? "s" : ""}</span>
-          </p>
-        )}
-      </div>
+    <div className="space-y-6 pb-4">
 
-      {/* Ranking */}
-      {leaderboard.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-            <Medal className="w-3.5 h-3.5" /> Ranking
-          </h2>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
-            {leaderboard.map((entry, i) => (
-              <div
-                key={entry.uid}
-                className={`flex items-center gap-3 px-4 py-2.5 border-b border-zinc-800 last:border-0 ${entry.uid === userId ? "bg-zinc-800/60" : ""}`}
-              >
-                <span className={`text-sm font-black w-5 text-center ${i === 0 ? "text-yellow-400" : i === 1 ? "text-zinc-400" : i === 2 ? "text-orange-400" : "text-zinc-600"}`}>
-                  {i + 1}
-                </span>
-                <span className="flex-1 text-sm text-zinc-300 truncate">{entry.name}</span>
-                <span className="text-sm font-black text-white">{entry.pts} pt{entry.pts !== 1 ? "s" : ""}</span>
-              </div>
-            ))}
+      {/* ── Hero ── */}
+      <div className="relative rounded-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-linear-to-br from-yellow-600/20 via-orange-600/10 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(234,179,8,0.12),transparent_60%)]" />
+        <div className="relative p-5 space-y-3 border border-yellow-500/20 rounded-2xl">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] text-yellow-400/80 uppercase tracking-widest font-bold">Copa do Mundo 2026</p>
+              <h1 className="text-xl font-black text-white leading-tight">Bolão das Finais</h1>
+              <p className="text-xs text-zinc-400 max-w-55">
+                Acerte o placar exato e concorra ao prêmio.
+              </p>
+            </div>
+            <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+              <Trophy className="w-7 h-7 text-yellow-400" />
+            </div>
+          </div>
+
+          {/* Stats do usuário */}
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            <StatChip label="Palpites" value={`${myPicksCount}/${totalKnockout}`} />
+            <StatChip label="Pontos" value={myScore.toString()} highlight={myScore > 0} />
+            <StatChip label="Posição" value={myRank > 0 ? `${myRank}º` : "—"} />
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Jogos por fase */}
-      {knockoutFixtures.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-8 text-center space-y-2">
-          <Trophy className="w-8 h-8 text-zinc-700 mx-auto" />
-          <p className="text-sm text-zinc-500">O mata-mata ainda não começou.</p>
-          <p className="text-xs text-zinc-700">Os jogos aparecem aqui assim que a fase de grupos terminar.</p>
-        </div>
-      ) : (
-        sortedRounds.map((round) => (
-          <div key={round} className="space-y-2">
-            <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{round}</h2>
-            {byRound.get(round)!.map((fixture) => {
-              const isLocked = fixture.fixture.status.short !== "NS";
-              const pick = myPicks.get(fixture.fixture.id) ?? null;
+      {/* ── Ranking ── */}
+      {leaderboard.length > 0 && (
+        <div className="space-y-3">
+          <SectionTitle>Ranking</SectionTitle>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden divide-y divide-zinc-800">
+            {leaderboard.map((entry, i) => {
+              const isMe = entry.uid === userId;
               return (
-                <BolaoPickCard
-                  key={fixture.fixture.id}
-                  fixture={fixture}
-                  existingPick={pick}
-                  isLocked={isLocked}
-                />
+                <div
+                  key={entry.uid}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${isMe ? "bg-yellow-500/5" : ""}`}
+                >
+                  <span className="text-base w-6 text-center shrink-0">
+                    {i < 3 ? MEDALS[i] : <span className="text-xs text-zinc-600">{i + 1}</span>}
+                  </span>
+                  <span className={`flex-1 text-sm truncate ${isMe ? "text-yellow-300 font-bold" : "text-zinc-300"}`}>
+                    {entry.name}{isMe ? " (você)" : ""}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className={`text-sm font-black ${i === 0 ? "text-yellow-400" : "text-white"}`}>
+                      {entry.pts}
+                    </span>
+                    <span className="text-[10px] text-zinc-600">pt{entry.pts !== 1 ? "s" : ""}</span>
+                  </div>
+                </div>
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ── Jogos por fase ── */}
+      {knockoutFixtures.length === 0 ? (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-10 text-center space-y-3">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-800 flex items-center justify-center mx-auto">
+            <Trophy className="w-7 h-7 text-zinc-600" />
+          </div>
+          <p className="text-sm font-semibold text-zinc-400">Mata-mata ainda não começou</p>
+          <p className="text-xs text-zinc-600 max-w-50 mx-auto">
+            Os jogos aparecerão aqui assim que a fase de grupos terminar.
+          </p>
+        </div>
+      ) : (
+        sortedRounds.map((round) => (
+          <div key={round} className="space-y-3">
+            <SectionTitle>{round}</SectionTitle>
+            {byRound.get(round)!.map((fixture) => (
+              <BolaoPickCard
+                key={fixture.fixture.id}
+                fixture={fixture}
+                existingPick={myPicks.get(fixture.fixture.id) ?? null}
+                isLocked={fixture.fixture.status.short !== "NS"}
+              />
+            ))}
+          </div>
         ))
       )}
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.12em] flex items-center gap-2">
+      <span className="flex-1 h-px bg-zinc-800" />
+      {children}
+      <span className="flex-1 h-px bg-zinc-800" />
+    </h2>
+  );
+}
+
+function StatChip({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-2.5 text-center space-y-0.5">
+      <p className={`text-base font-black ${highlight ? "text-yellow-400" : "text-white"}`}>{value}</p>
+      <p className="text-[10px] text-zinc-600">{label}</p>
     </div>
   );
 }
