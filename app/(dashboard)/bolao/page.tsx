@@ -36,7 +36,7 @@ export default async function BolaoPage() {
     getCurrentUserId(),
     db.from("fixtures_cache").select("fixture_id, data").order("fixture_id"),
     db.from("bolao_picks").select("user_id, fixture_id, home_goals, away_goals"),
-    db.from("profiles").select("id", { count: "exact", head: true }),
+    db.from("profiles").select("id", { count: "exact", head: true }).eq("has_access", true),
   ]);
 
   const userCount = usersCountRes.count ?? 0;
