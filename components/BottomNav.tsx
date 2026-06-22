@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Radio, Trophy, GitBranch } from "lucide-react";
+import { Home, LayoutGrid, Radio, TrendingUp, GitBranch } from "lucide-react";
 
 const ITEMS = [
   { href: "/dashboard",    icon: Home,        label: "Jogos"    },
   { href: "/grupos",       icon: LayoutGrid,  label: "Grupos"   },
-  { href: "/artilharia",   icon: Trophy,      label: "Artilh."  },
+  { href: "/stats",        icon: TrendingUp,  label: "Acertos"  },
   { href: "/chaveamento",  icon: GitBranch,   label: "Chavea."  },
   { href: "/ao-vivo",      icon: Radio,       label: "Ao Vivo"  },
 ];
