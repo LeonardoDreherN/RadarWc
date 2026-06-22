@@ -4,42 +4,63 @@ export async function analyzeMatchWithAI(
   home: string,
   away: string,
   fixtureId: number,
-  h2hSummary: H2HSummary
+  h2hSummary: H2HSummary,
+  round?: string
 ): Promise<MatchAnalysis | null> {
   try {
-    const prompt = `Você é um analista especializado em apostas esportivas da Copa do Mundo.
-Analise o jogo ${home} vs ${away} na Copa do Mundo 2026 com base no seu conhecimento real sobre as seleções.
+    const phase = round ?? "Copa do Mundo 2026";
+    const isKnockout = /round of|quarter|semi|final/i.test(phase);
+    const isGroupStage = /group/i.test(phase);
 
-Avalie cada mercado e classifique o risco com base na confiança:
-- "baixo": confiança > 65% — tendência forte, vale apostar
-- "medio": confiança entre 31-65% — tendência moderada, avaliar
-- "alto": confiança ≤ 30% — muito incerto, alto risco
-- "nao_apostar": quando não há tendência clara ou dados contraditórios
+    const prompt = `Você é um analista especializado em apostas esportivas da Copa do Mundo 2026.
+Analise o jogo ${home} vs ${away} — ${phase}.
 
-Retorne APENAS JSON válido, sem markdown, sem explicações fora do JSON:
+CONTEXTO DA FASE:
+${isKnockout ? `- É jogo ELIMINATÓRIO. Ambas as equipes jogam com tudo, sem poupar. Isso tende a reduzir gols no tempo normal pois as equipes ficam mais cautelosas. Prorrogação e pênaltis são possíveis.` : ""}
+${isGroupStage ? `- É jogo de FASE DE GRUPOS. Dependendo da situação na tabela, um time pode já estar classificado ou precisar vencer para avançar. Considere o nível de motivação de cada equipe.` : ""}
+- Fase: ${phase}
+
+MERCADOS DISPONÍVEIS (escolha de 7 a 10 que fazem mais sentido para ESTE jogo específico):
+1. Gols no Jogo: "Mais de 2.5 Gols" ou "Menos de 2.5 Gols"
+2. Ambas Marcam: "Sim" ou "Não"
+3. Gol no 1° Tempo: "Provável" ou "Improvável"
+4. Resultado Final: quem vence ou empate (ex: "${home} vence" ou "Empate provável")
+5. Escanteios: "Mais de 9.5" ou "Menos de 9.5"
+6. Cartões: "Mais de 3.5" ou "Menos de 3.5"
+7. Handicap Asiático: qual time tem vantagem e por quê
+8. Vencedor do 1° Tempo: quem deve abrir o placar ou empate no intervalo
+9. Clean Sheet: "${home} não sofre gol" ou "${away} não sofre gol"
+10. Gols do ${home}: "Mais de 1.5" ou "Menos de 1.5"
+11. Gols do ${away}: "Mais de 1.5" ou "Menos de 1.5"
+12. Primeiro a Marcar: qual equipe tende a marcar primeiro
+13. Mais de 1.5 Gols: se o jogo tende a ter pelo menos 2 gols
+14. Resultado ao Intervalo/Final: combinação de resultado no intervalo e no final
+15. Empate na partida: probabilidade real de empate neste confronto específico
+
+INSTRUÇÕES:
+- Escolha apenas os mercados que têm análise RELEVANTE para este jogo específico. Não force todos.
+- Baseie em: ranking FIFA, estilo de jogo, histórico recente, fase da Copa, força ofensiva/defensiva conhecida de cada seleção, confrontos diretos históricos.
+- Seja ESPECÍFICO: mencione características reais de cada seleção (ex: "Brasil tem forte pressão alta", "Argentina é sólida defensivamente com Di María").
+- Classifique o risco:
+  • "baixo": confiança > 65% — tendência forte, vale apostar
+  • "medio": confiança entre 40-65% — tendência moderada, avaliar bem
+  • "alto": confiança < 40% — muito incerto
+  • "nao_apostar": dados contraditórios ou jogo muito imprevisível
+
+Retorne APENAS JSON válido, sem markdown, sem texto fora do JSON:
 {
   "labels": [
     {
-      "market": "Gols no Jogo",
-      "suggestion": "Mais de 2.5 Gols" ou "Menos de 2.5 Gols",
+      "market": "nome do mercado",
+      "suggestion": "sugestão específica",
       "confidence": número de 0 a 100,
-      "basis": "Explicação objetiva em português com dados que você conhece sobre estes times",
-      "totalGames": número estimado de jogos analisados,
-      "hits": número estimado de acertos,
+      "basis": "Explicação objetiva em português com dados reais sobre estes times neste contexto",
+      "totalGames": número estimado de jogos relevantes analisados,
+      "hits": número estimado de acertos históricos,
       "risk": "baixo" ou "medio" ou "alto" ou "nao_apostar"
     }
   ]
-}
-
-Analise TODOS estes mercados em português:
-1. Gols no Jogo: "Mais de 2.5 Gols" ou "Menos de 2.5 Gols"
-2. Ambas Marcam: "Sim — Ambas as equipes marcam" ou "Não — Pelo menos uma equipe não marca"
-3. Gol no 1° Tempo: "Gol antes do intervalo — Provável" ou "Sem gol no 1° tempo — Mais provável"
-4. Resultado: quem é favorito e por quê (ex: "${home} favorito ao triunfo")
-5. Escanteios: "Mais de 9.5 escanteios" ou "Menos de 9.5 escanteios"
-6. Cartões: "Mais de 3.5 cartões" ou "Menos de 3.5 cartões"
-
-Base suas análises em: ranking FIFA, estilo de jogo, histórico recente, fase da Copa, nível dos atacantes e defensores de cada seleção.`;
+}`;
 
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -50,8 +71,8 @@ Base suas análises em: ranking FIFA, estilo de jogo, histórico recente, fase d
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-        max_tokens: 1500,
+        temperature: 0.65,
+        max_tokens: 2500,
       }),
     });
 

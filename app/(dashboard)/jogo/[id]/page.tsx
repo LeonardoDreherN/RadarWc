@@ -76,7 +76,7 @@ async function buildAnalysis(fixture: Fixture): Promise<SplitAnalysis> {
     getFixtureOdds(fixture.fixture.id).catch(() => ({ bookmakers: [] })),
     analyzeMatchWithAI(fixture.teams.home.name, fixture.teams.away.name, fixture.fixture.id, {
       total: 0, homeWins: 0, awayWins: 0, draws: 0, avgGoals: 0, bttsCount: 0,
-    }),
+    }, fixture.league.round),
   ]);
 
   const h2hSummary = buildH2HSummary(h2h, homeId);
