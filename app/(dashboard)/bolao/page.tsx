@@ -2,22 +2,14 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseAdmin } from "@/lib/supabase";
 import { BolaoPickCard } from "@/components/BolaoPickCard";
+import { BolaoPot } from "@/components/BolaoPot";
 import { Trophy } from "lucide-react";
 import type { Fixture } from "@/lib/football-api";
 
 const FINISHED = ["FT", "AET", "PEN"];
 const GROUP_ROUND = "Fase de Grupos";
-
 const MEDALS = ["🥇", "🥈", "🥉"];
-
-const ROUND_ORDER = [
-  "Rodada de 32",
-  "Oitavas de Final",
-  "Quartas de Final",
-  "Semifinal",
-  "3º Lugar",
-  "Final",
-];
+const ROUND_ORDER = ["Rodada de 32", "Oitavas de Final", "Quartas de Final", "Semifinal", "3º Lugar", "Final"];
 
 interface BolaoRow {
   user_id: string;
@@ -40,12 +32,14 @@ async function getCurrentUserId(): Promise<string | null> {
 export default async function BolaoPage() {
   const db = supabaseAdmin();
 
-  const [userId, fixturesRes, picksRes] = await Promise.all([
+  const [userId, fixturesRes, picksRes, usersCountRes] = await Promise.all([
     getCurrentUserId(),
     db.from("fixtures_cache").select("fixture_id, data").order("fixture_id"),
     db.from("bolao_picks").select("user_id, fixture_id, home_goals, away_goals"),
+    db.from("profiles").select("id", { count: "exact", head: true }),
   ]);
 
+  const userCount = usersCountRes.count ?? 0;
   const allFixtures: Fixture[] = (fixturesRes.data ?? []).map((r: { data: Fixture }) => r.data);
   const knockoutFixtures = allFixtures
     .filter((f) => f.league.round !== GROUP_ROUND)
@@ -56,7 +50,7 @@ export default async function BolaoPage() {
     allPicks.filter((p) => p.user_id === userId).map((p) => [p.fixture_id, p])
   );
 
-  // Pontuação: 1pt por placar exato
+  // Pontuação: 1pt por placar exato em jogos encerrados
   const finishedKnockout = knockoutFixtures.filter((f) => FINISHED.includes(f.fixture.status.short));
   const scoreMap = new Map<string, number>();
   for (const fixture of finishedKnockout) {
@@ -70,19 +64,21 @@ export default async function BolaoPage() {
     }
   }
 
-  // Emails
+  // Todos os usuários com palpites (inclusive 0 pts)
+  const allPickUserIds = Array.from(new Set(allPicks.map((p) => p.user_id)));
+
   let emailMap = new Map<string, string>();
-  if (scoreMap.size > 0) {
+  if (allPickUserIds.length > 0) {
     try {
       const { data: { users } } = await db.auth.admin.listUsers({ perPage: 500 });
       emailMap = new Map(users.map((u) => [u.id, u.email?.split("@")[0] ?? "Usuário"]));
     } catch {}
   }
 
-  const leaderboard = Array.from(scoreMap.entries())
-    .map(([uid, pts]) => ({ uid, pts, name: emailMap.get(uid) ?? "Usuário" }))
-    .sort((a, b) => b.pts - a.pts)
-    .slice(0, 10);
+  const leaderboard = allPickUserIds
+    .map((uid) => ({ uid, pts: scoreMap.get(uid) ?? 0, name: emailMap.get(uid) ?? "Usuário" }))
+    .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name))
+    .slice(0, 15);
 
   const myScore = scoreMap.get(userId ?? "") ?? 0;
   const myRank = leaderboard.findIndex((r) => r.uid === userId) + 1;
@@ -105,27 +101,31 @@ export default async function BolaoPage() {
   return (
     <div className="space-y-6 pb-4">
 
-      {/* ── Hero ── */}
-      <div className="relative rounded-2xl overflow-hidden">
+      {/* ── Hero com pot ── */}
+      <div className="relative rounded-2xl overflow-hidden border border-yellow-500/20">
         <div className="absolute inset-0 bg-linear-to-br from-yellow-600/20 via-orange-600/10 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(234,179,8,0.12),transparent_60%)]" />
-        <div className="relative p-5 space-y-3 border border-yellow-500/20 rounded-2xl">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] text-yellow-400/80 uppercase tracking-widest font-bold">Copa do Mundo 2026</p>
-              <h1 className="text-xl font-black text-white leading-tight">Bolão das Finais</h1>
-              <p className="text-xs text-zinc-400 max-w-55">
-                Acerte o placar exato e concorra ao prêmio.
-              </p>
+
+        <div className="relative p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold">Copa do Mundo 2026</p>
+              <h1 className="text-lg font-black text-white">Bolão das Finais</h1>
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-              <Trophy className="w-7 h-7 text-yellow-400" />
+            <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+              <Trophy className="w-6 h-6 text-yellow-400" />
             </div>
           </div>
 
-          {/* Stats do usuário */}
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            <StatChip label="Palpites" value={`${myPicksCount}/${totalKnockout}`} />
+          {/* Pot ao vivo */}
+          <div className="rounded-xl bg-black/30 border border-yellow-500/15 p-4 space-y-1">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Prêmio acumulado</p>
+            <BolaoPot initialCount={userCount} />
+          </div>
+
+          {/* Stats pessoais */}
+          <div className="grid grid-cols-3 gap-2">
+            <StatChip label="Palpites" value={`${myPicksCount}/${totalKnockout || "?"}`} />
             <StatChip label="Pontos" value={myScore.toString()} highlight={myScore > 0} />
             <StatChip label="Posição" value={myRank > 0 ? `${myRank}º` : "—"} />
           </div>
@@ -142,16 +142,18 @@ export default async function BolaoPage() {
               return (
                 <div
                   key={entry.uid}
-                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${isMe ? "bg-yellow-500/5" : ""}`}
+                  className={`flex items-center gap-3 px-4 py-3 ${isMe ? "bg-yellow-500/5" : ""}`}
                 >
-                  <span className="text-base w-6 text-center shrink-0">
-                    {i < 3 ? MEDALS[i] : <span className="text-xs text-zinc-600">{i + 1}</span>}
+                  <span className="w-6 text-center shrink-0">
+                    {i < 3
+                      ? <span className="text-base">{MEDALS[i]}</span>
+                      : <span className="text-xs text-zinc-600">{i + 1}</span>}
                   </span>
                   <span className={`flex-1 text-sm truncate ${isMe ? "text-yellow-300 font-bold" : "text-zinc-300"}`}>
                     {entry.name}{isMe ? " (você)" : ""}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <span className={`text-sm font-black ${i === 0 ? "text-yellow-400" : "text-white"}`}>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className={`text-sm font-black tabular-nums ${i === 0 && entry.pts > 0 ? "text-yellow-400" : "text-white"}`}>
                       {entry.pts}
                     </span>
                     <span className="text-[10px] text-zinc-600">pt{entry.pts !== 1 ? "s" : ""}</span>
@@ -160,6 +162,9 @@ export default async function BolaoPage() {
               );
             })}
           </div>
+          <p className="text-[10px] text-zinc-700 text-center">
+            Ranking atualiza conforme os jogos encerram
+          </p>
         </div>
       )}
 
@@ -170,8 +175,8 @@ export default async function BolaoPage() {
             <Trophy className="w-7 h-7 text-zinc-600" />
           </div>
           <p className="text-sm font-semibold text-zinc-400">Mata-mata ainda não começou</p>
-          <p className="text-xs text-zinc-600 max-w-50 mx-auto">
-            Os jogos aparecerão aqui assim que a fase de grupos terminar.
+          <p className="text-xs text-zinc-600 mx-auto max-w-50">
+            Os jogos aparecem aqui assim que a fase de grupos terminar.
           </p>
         </div>
       ) : (
