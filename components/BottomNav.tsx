@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Trophy, TrendingUp, GitBranch } from "lucide-react";
+import { Home, LayoutGrid, Trophy, GitBranch } from "lucide-react";
 
 const ITEMS = [
   { href: "/dashboard",    icon: Home,        label: "Jogos"    },
   { href: "/grupos",       icon: LayoutGrid,  label: "Grupos"   },
   { href: "/artilharia",   icon: Trophy,      label: "Artilh."  },
   { href: "/chaveamento",  icon: GitBranch,   label: "Chavea."  },
-  { href: "/stats",        icon: TrendingUp,  label: "Acertos"  },
 ];
 
 export function BottomNav() {
