@@ -4,15 +4,16 @@ import { MatchDateTime } from "@/components/MatchDateTime";
 import { supabaseAdmin } from "@/lib/supabase";
 import { BetLabel } from "@/components/BetLabel";
 import { H2HStats } from "@/components/H2HStats";
+import { TeamStyleComparison } from "@/components/TeamStyleComparison";
 import type { Fixture } from "@/lib/football-api";
 import {
   analyzeGoals, analyzeResult, buildH2HSummary, parseMatchOdds,
-  type MatchAnalysis, type RiskLevel, type OddImplied, type H2HSummary,
+  type MatchAnalysis, type RiskLevel, type OddImplied, type H2HSummary, type TeamStyles,
 } from "@/lib/analysis";
 import {
   getTeamFixtureHistory, getH2H, getFixtureOdds,
 } from "@/lib/football-api";
-import { analyzeMatchWithAI } from "@/lib/gemini";
+import { analyzeMatchWithAI, analyzeTeamStyles } from "@/lib/gemini";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -35,6 +36,7 @@ interface SplitAnalysis {
   historicalAnalysis: MatchAnalysis | null;
   oddImplied?: OddImplied;
   h2hSummary: H2HSummary;
+  teamStyles?: TeamStyles | null;
 }
 
 const CACHE_TTL_HOURS = 6;
@@ -69,7 +71,7 @@ async function buildAnalysis(fixture: Fixture): Promise<SplitAnalysis> {
   const homeId = fixture.teams.home.id;
   const awayId = fixture.teams.away.id;
 
-  const [homeHistory, awayHistory, h2h, oddsData, aiResult] = await Promise.all([
+  const [homeHistory, awayHistory, h2h, oddsData, aiResult, teamStyles] = await Promise.all([
     getTeamFixtureHistory(homeId).catch(() => []),
     getTeamFixtureHistory(awayId).catch(() => []),
     getH2H(homeId, awayId, fixture.fixture.id).catch(() => []),
@@ -77,6 +79,7 @@ async function buildAnalysis(fixture: Fixture): Promise<SplitAnalysis> {
     analyzeMatchWithAI(fixture.teams.home.name, fixture.teams.away.name, fixture.fixture.id, {
       total: 0, homeWins: 0, awayWins: 0, draws: 0, avgGoals: 0, bttsCount: 0,
     }, fixture.league.round),
+    analyzeTeamStyles(fixture.teams.home.name, fixture.teams.away.name).catch(() => null),
   ]);
 
   const h2hSummary = buildH2HSummary(h2h, homeId);
@@ -103,6 +106,7 @@ async function buildAnalysis(fixture: Fixture): Promise<SplitAnalysis> {
       : null,
     oddImplied: oddsData ? (parseMatchOdds(oddsData.bookmakers) ?? undefined) : undefined,
     h2hSummary,
+    teamStyles,
   };
 
   // Salva no cache em background (não bloqueia a resposta)
@@ -117,7 +121,7 @@ export default async function JogoPage({ params }: Props) {
 
   const fixture = await getFixture(fixtureId);
   if (!fixture) notFound();
-  const { aiAnalysis, historicalAnalysis, oddImplied, h2hSummary } = await buildAnalysis(fixture);
+  const { aiAnalysis, historicalAnalysis, oddImplied, h2hSummary, teamStyles } = await buildAnalysis(fixture);
 
   const isLive = ["1H", "HT", "2H", "ET", "P"].includes(fixture.fixture.status.short);
   const isFinished = ["FT", "AET", "PEN"].includes(fixture.fixture.status.short);
@@ -174,6 +178,18 @@ export default async function JogoPage({ params }: Props) {
           {fixture.fixture.venue.name} · {fixture.fixture.venue.city}
         </p>
       </div>
+
+      {/* Confronto de Estilos */}
+      {teamStyles && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest">Confronto de Estilos</h2>
+          <TeamStyleComparison
+            styles={teamStyles}
+            homeName={fixture.teams.home.name}
+            awayName={fixture.teams.away.name}
+          />
+        </div>
+      )}
 
       {/* Odd implícita */}
       {oddImplied && (

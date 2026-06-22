@@ -1,4 +1,45 @@
-import type { BetLabel, H2HSummary, MatchAnalysis, RiskLevel } from "./analysis";
+import type { BetLabel, H2HSummary, MatchAnalysis, RiskLevel, TeamStyles } from "./analysis";
+
+export async function analyzeTeamStyles(home: string, away: string): Promise<TeamStyles | null> {
+  try {
+    const prompt = `Você é um analista da Copa do Mundo 2026. Avalie ${home} e ${away} em 4 atributos, pontuando de 0 a 100 com base no seu conhecimento real sobre cada seleção nesta Copa.
+
+Atributos:
+- ofensivo: poder de ataque, criatividade ofensiva, qualidade dos atacantes
+- defensivo: solidez defensiva, organização tática, qualidade dos zagueiros
+- intensidade: pressão alta, ritmo de jogo, volume de corrida
+- experiencia: histórico em Copas do Mundo, desempenho em eliminatórias e torneios recentes
+
+Retorne APENAS JSON válido:
+{
+  "home": { "ofensivo": 0-100, "defensivo": 0-100, "intensidade": 0-100, "experiencia": 0-100 },
+  "away": { "ofensivo": 0-100, "defensivo": 0-100, "intensidade": 0-100, "experiencia": 0-100 }
+}`;
+
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.4,
+        max_tokens: 300,
+      }),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim() ?? "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    return JSON.parse(jsonMatch[0]) as TeamStyles;
+  } catch {
+    return null;
+  }
+}
 
 export async function analyzeMatchWithAI(
   home: string,

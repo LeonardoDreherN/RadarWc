@@ -37,6 +37,18 @@ export interface OddImplied {
   away: number;
 }
 
+export interface TeamStyle {
+  ofensivo: number;
+  defensivo: number;
+  intensidade: number;
+  experiencia: number;
+}
+
+export interface TeamStyles {
+  home: TeamStyle;
+  away: TeamStyle;
+}
+
 // ─── Utilitários ─────────────────────────────────────────────────────────────
 
 function pct(hits: number, total: number): number {
