@@ -26,7 +26,7 @@ Retorne APENAS JSON válido:
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.4,
-        max_tokens: 300,
+        max_tokens: 200,
       }),
     });
 
@@ -114,7 +114,7 @@ Retorne APENAS JSON válido, sem markdown, sem texto fora do JSON:
         model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.65,
-        max_tokens: 2500,
+        max_tokens: 1500,
       }),
     });
 

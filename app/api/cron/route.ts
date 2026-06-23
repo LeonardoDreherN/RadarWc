@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
       if (!cached) return true;
       if (!cached.data?.aiAnalysis) return true; // cache existe mas análise é nula
       const ageHours = (nowMs - new Date(cached.updated_at).getTime()) / 3600000;
-      return ageHours > 6;
+      return ageHours > 12;
     });
 
     // Processa todos em paralelo — cada jogo faz 2 chamadas Groq simultâneas
