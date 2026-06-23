@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView, AnimatePresence, type Variants } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
-import { Check, ChevronDown, Zap, BarChart2, Shield, Clock, Users, Trophy } from "lucide-react";
+import { Check, ChevronDown, Zap, BarChart2, Shield, Clock, Users, Trophy, Gift } from "lucide-react";
 
 const KIWIFY_URL = process.env.NEXT_PUBLIC_KIWIFY_URL ?? "#";
 
@@ -126,6 +126,62 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         <p className="px-5 pb-4 text-sm text-zinc-400 leading-relaxed">{a}</p>
       </motion.div>
     </div>
+  );
+}
+
+const PLATFORM_BONUS = 100;
+const PER_USER = 1.5;
+const USER_OFFSET = 33;
+
+function calcJackpot(count: number) {
+  return PLATFORM_BONUS + (count + USER_OFFSET) * PER_USER;
+}
+
+function JackpotBanner() {
+  const [total, setTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/bolao/pot")
+      .then((r) => r.json())
+      .then(({ count }) => setTotal(calcJackpot(count)))
+      .catch(() => setTotal(calcJackpot(0)));
+  }, []);
+
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  return (
+    <RevealSection className="mb-14">
+      <div className="relative rounded-2xl overflow-hidden border border-yellow-500/30 bg-zinc-900/80">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(234,179,8,0.10),transparent_60%)]" />
+        <div className="relative p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center shrink-0">
+              <Gift className="w-4 h-4 text-yellow-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold">Bolão das Finais</p>
+              <p className="text-sm font-bold text-white">Prêmio acumulado em disputa</p>
+            </div>
+          </div>
+
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm text-yellow-400/80 font-bold">R$</span>
+            <span className="text-4xl font-black text-yellow-400 tabular-nums">
+              {total !== null ? fmt(total) : "—"}
+            </span>
+          </div>
+
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            Acerte o placar dos jogos do mata-mata e concorra ao prêmio. Incluso no seu acesso.
+          </p>
+
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+            <span className="text-[11px] text-zinc-500">Valor atualiza a cada novo assinante</span>
+          </div>
+        </div>
+      </div>
+    </RevealSection>
   );
 }
 
@@ -256,6 +312,9 @@ export default function LandingPage() {
               </div>
             </div>
           </RevealSection>
+
+          {/* ── JACKPOT BOLÃO ────────────────────────────────────────── */}
+          <JackpotBanner />
 
           {/* ── STATS BAR ────────────────────────────────────────────── */}
           <RevealSection>
