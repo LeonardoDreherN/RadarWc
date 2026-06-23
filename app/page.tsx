@@ -207,7 +207,7 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-sm text-zinc-300 font-semibold">115 apostadores ativos</span>
+                <span className="text-sm text-zinc-300 font-semibold">comunidade em crescimento</span>
               </div>
             </motion.div>
 
@@ -233,15 +233,36 @@ export default function LandingPage() {
               >
                 Já tenho conta
               </Link>
+              <div className="flex items-center justify-center gap-1.5 pt-1">
+                <Shield className="w-3.5 h-3.5 text-zinc-500" />
+                <span className="text-xs text-zinc-500">Pagamento seguro via Kiwify</span>
+              </div>
             </motion.div>
           </div>
+
+          {/* ── VÍDEO DEMO ───────────────────────────────────────────── */}
+          <RevealSection className="mb-14">
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Veja como funciona</p>
+              <div className="rounded-2xl overflow-hidden border border-zinc-800 shadow-xl shadow-black/40">
+                <video
+                  src="/icons/demo.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          </RevealSection>
 
           {/* ── STATS BAR ────────────────────────────────────────────── */}
           <RevealSection>
             <div className="grid grid-cols-3 gap-3 mb-14">
               {[
-                { value: "115+", label: "apostadores" },
-                { value: "104", label: "jogos" },
+                { value: "84%", label: "taxa de acerto" },
+                { value: "200+", label: "análises" },
                 { value: "R$17,90", label: "acesso total" },
               ].map((s) => (
                 <div key={s.label} className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-3 text-center">
