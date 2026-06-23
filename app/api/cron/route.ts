@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getWorldCupFixtures, getLiveFixtures, type Fixture } from "@/lib/football-api";
+import { getWorldCupFixtures, getLiveFixtures, getH2H, type Fixture } from "@/lib/football-api";
 import { evaluatePrediction } from "@/lib/accuracy";
+import { analyzeMatchWithAI, analyzeTeamStyles } from "@/lib/gemini";
+import { buildH2HSummary } from "@/lib/analysis";
 
 const FINISHED = ["FT", "AET", "PEN"];
 
@@ -99,6 +101,50 @@ export async function GET(req: NextRequest) {
   // Avalia previsões dos jogos encerrados
   const finished = merged.filter((f) => FINISHED.includes(f.fixture.status.short));
   await evaluateFinishedMatches(db, finished);
+
+  // Pré-gera análise para os próximos 8 jogos sem cache
+  const upcoming = merged
+    .filter((f) => f.fixture.status.short === "NS")
+    .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime())
+    .slice(0, 8);
+
+  if (upcoming.length > 0) {
+    const cachedIds = await db
+      .from("analysis_cache")
+      .select("fixture_id, updated_at")
+      .in("fixture_id", upcoming.map((f) => f.fixture.id));
+
+    const now = Date.now();
+    const stale = new Set(
+      upcoming
+        .filter((f) => {
+          const cached = (cachedIds.data ?? []).find((c: { fixture_id: number; updated_at: string }) => c.fixture_id === f.fixture.id);
+          if (!cached) return true;
+          const age = (now - new Date(cached.updated_at).getTime()) / 3600000;
+          return age > 6;
+        })
+        .map((f) => f.fixture.id)
+    );
+
+    for (const f of upcoming) {
+      if (!stale.has(f.fixture.id)) continue;
+      try {
+        const [h2h, aiAnalysis, teamStyles] = await Promise.all([
+          getH2H(f.teams.home.id, f.teams.away.id, f.fixture.id).catch(() => []),
+          analyzeMatchWithAI(f.teams.home.name, f.teams.away.name, f.fixture.id, { total: 0, homeWins: 0, awayWins: 0, draws: 0, avgGoals: 0, bttsCount: 0 }, f.league.round),
+          analyzeTeamStyles(f.teams.home.name, f.teams.away.name).catch(() => null),
+        ]);
+        const h2hSummary = buildH2HSummary(h2h, f.teams.home.id);
+        await db.from("analysis_cache").upsert({
+          fixture_id: f.fixture.id,
+          data: { aiAnalysis, historicalAnalysis: null, h2hSummary, teamStyles },
+          updated_at: new Date().toISOString(),
+        });
+      } catch {
+        // ignora erros individuais para não travar o cron
+      }
+    }
+  }
 
   return NextResponse.json({
     ok: true,
