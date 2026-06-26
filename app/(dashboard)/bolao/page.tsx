@@ -9,7 +9,7 @@ import type { Fixture } from "@/lib/football-api";
 const FINISHED = ["FT", "AET", "PEN"];
 const GROUP_ROUND = "Fase de Grupos";
 const MEDALS = ["🥇", "🥈", "🥉"];
-const ROUND_ORDER = ["Rodada de 32", "Oitavas de Final", "Quartas de Final", "Semifinal", "3º Lugar", "Final"];
+const ROUND_ORDER = ["16 Avos de Final", "Oitavas de Final", "Quartas de Final", "Semifinal", "3º Lugar", "Final"];
 
 interface BolaoRow {
   user_id: string;

@@ -79,6 +79,7 @@ function statusMap(status: string): string {
 
 const STAGE_MAP: Record<string, string> = {
   GROUP_STAGE: "Fase de Grupos",
+  ROUND_OF_32: "16 Avos de Final",
   ROUND_OF_16: "Oitavas de Final",
   QUARTER_FINALS: "Quartas de Final",
   SEMI_FINALS: "Semifinal",
