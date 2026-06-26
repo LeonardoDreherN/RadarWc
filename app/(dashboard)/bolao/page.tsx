@@ -96,8 +96,9 @@ export default async function BolaoPage() {
   }
 
   const anyScored = leaderboard.some((e) => e.pts > 0);
+  const scorers = leaderboard.filter((e) => e.pts > 0);
   const top3: ({ name: string; pts: number; isMe: boolean } | null)[] = [0, 1, 2].map(
-    (i) => leaderboard[i] ? { name: leaderboard[i].name, pts: leaderboard[i].pts, isMe: leaderboard[i].uid === userId } : null
+    (i) => scorers[i] ? { name: scorers[i].name, pts: scorers[i].pts, isMe: scorers[i].uid === userId } : null
   );
 
   const myScore = scoreMap.get(userId ?? "") ?? 0;
