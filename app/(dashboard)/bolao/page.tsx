@@ -7,9 +7,24 @@ import { Trophy } from "lucide-react";
 import type { Fixture } from "@/lib/football-api";
 
 const FINISHED = ["FT", "AET", "PEN"];
-const GROUP_ROUND = "Fase de Grupos";
+const GROUP_ROUNDS = ["Fase de Grupos", "GROUP_STAGE"];
 const MEDALS = ["🥇", "🥈", "🥉"];
 const ROUND_ORDER = ["16 Avos de Final", "Oitavas de Final", "Quartas de Final", "Semifinal", "3º Lugar", "Final"];
+
+const ROUND_NORMALIZE: Record<string, string> = {
+  LAST_32: "16 Avos de Final",
+  LAST_16: "Oitavas de Final",
+  ROUND_OF_32: "16 Avos de Final",
+  ROUND_OF_16: "Oitavas de Final",
+  QUARTER_FINALS: "Quartas de Final",
+  SEMI_FINALS: "Semifinal",
+  THIRD_PLACE: "3º Lugar",
+  FINAL: "Final",
+};
+
+function normalizeRound(round: string): string {
+  return ROUND_NORMALIZE[round] ?? round;
+}
 
 interface BolaoRow {
   user_id: string;
@@ -42,7 +57,7 @@ export default async function BolaoPage() {
   const userCount = usersCountRes.count ?? 0;
   const allFixtures: Fixture[] = (fixturesRes.data ?? []).map((r: { data: Fixture }) => r.data);
   const knockoutFixtures = allFixtures
-    .filter((f) => f.league.round !== GROUP_ROUND)
+    .filter((f) => !GROUP_ROUNDS.includes(f.league.round))
     .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
 
   const allPicks: BolaoRow[] = picksRes.data ?? [];
@@ -88,7 +103,7 @@ export default async function BolaoPage() {
   // Agrupar por fase
   const byRound = new Map<string, Fixture[]>();
   for (const f of knockoutFixtures) {
-    const round = f.league.round || "Mata-mata";
+    const round = normalizeRound(f.league.round || "Mata-mata");
     if (!byRound.has(round)) byRound.set(round, []);
     byRound.get(round)!.push(f);
   }
