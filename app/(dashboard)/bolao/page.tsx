@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseAdmin } from "@/lib/supabase";
 import { BolaoPickCard } from "@/components/BolaoPickCard";
 import { BolaoPot } from "@/components/BolaoPot";
+import { BolaoPodium } from "@/components/BolaoPodium";
 import { Trophy } from "lucide-react";
 import type { Fixture } from "@/lib/football-api";
 
@@ -95,6 +96,9 @@ export default async function BolaoPage() {
   }
 
   const anyScored = leaderboard.some((e) => e.pts > 0);
+  const top3: ({ name: string; pts: number; isMe: boolean } | null)[] = [0, 1, 2].map(
+    (i) => leaderboard[i] ? { name: leaderboard[i].name, pts: leaderboard[i].pts, isMe: leaderboard[i].uid === userId } : null
+  );
 
   const myScore = scoreMap.get(userId ?? "") ?? 0;
   const myRank = leaderboard.findIndex((r) => r.uid === userId) + 1;
@@ -150,52 +154,25 @@ export default async function BolaoPage() {
 
       {/* ── Ranking ── */}
       <div className="space-y-3">
-        <SectionTitle>Ranking</SectionTitle>
-
-        {leaderboard.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-center space-y-2">
-            <p className="text-sm font-semibold text-zinc-400">Nenhum palpite ainda</p>
-            <p className="text-xs text-zinc-600">Seja o primeiro a palpitar!</p>
+        <SectionTitle>Pódio</SectionTitle>
+        <BolaoPodium top3={top3} anyScored={anyScored} />
+        {leaderboard.length > 3 && (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden divide-y divide-zinc-800">
+            {leaderboard.slice(3).map((entry, i) => {
+              const isMe = entry.uid === userId;
+              return (
+                <div key={entry.uid} className={`flex items-center gap-3 px-4 py-2.5 ${isMe ? "bg-yellow-500/5" : ""}`}>
+                  <span className="text-xs text-zinc-600 w-5 text-center shrink-0">{i + 4}</span>
+                  <span className={`flex-1 text-sm truncate ${isMe ? "text-yellow-300 font-bold" : "text-zinc-400"}`}>
+                    {entry.name}{isMe ? " ✦" : ""}
+                  </span>
+                  <span className="text-sm font-black text-zinc-400 tabular-nums">{entry.pts} pts</span>
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <>
-            {!anyScored && (
-              <div className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-3 py-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse shrink-0" />
-                <p className="text-xs text-zinc-400">Aguardando o primeiro resultado do mata-mata</p>
-              </div>
-            )}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden divide-y divide-zinc-800">
-              {leaderboard.map((entry, i) => {
-                const isMe = entry.uid === userId;
-                return (
-                  <div
-                    key={entry.uid}
-                    className={`flex items-center gap-3 px-4 py-3 ${isMe ? "bg-yellow-500/5" : ""}`}
-                  >
-                    <span className="w-6 text-center shrink-0">
-                      {anyScored && i < 3
-                        ? <span className="text-base">{MEDALS[i]}</span>
-                        : <span className="text-xs text-zinc-600">{i + 1}</span>}
-                    </span>
-                    <span className={`flex-1 text-sm truncate ${isMe ? "text-yellow-300 font-bold" : "text-zinc-300"}`}>
-                      {entry.name}{isMe ? " (você)" : ""}
-                    </span>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className={`text-sm font-black tabular-nums ${i === 0 && entry.pts > 0 ? "text-yellow-400" : "text-zinc-400"}`}>
-                        {entry.pts}
-                      </span>
-                      <span className="text-[10px] text-zinc-600">pt{entry.pts !== 1 ? "s" : ""}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-zinc-700 text-center">
-              Ranking atualiza conforme os jogos encerram
-            </p>
-          </>
         )}
+        <p className="text-[10px] text-zinc-700 text-center">Ranking atualiza conforme os jogos encerram</p>
       </div>
 
       {/* ── Jogos por fase ── */}
