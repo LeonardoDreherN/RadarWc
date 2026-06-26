@@ -79,6 +79,8 @@ function statusMap(status: string): string {
 
 const STAGE_MAP: Record<string, string> = {
   GROUP_STAGE: "Fase de Grupos",
+  LAST_32: "16 Avos de Final",
+  LAST_16: "Oitavas de Final",
   ROUND_OF_32: "16 Avos de Final",
   ROUND_OF_16: "Oitavas de Final",
   QUARTER_FINALS: "Quartas de Final",
@@ -301,7 +303,7 @@ export async function getScorers(limit = 20): Promise<Scorer[]> {
   }
 }
 
-const KNOCKOUT_STAGES = ["ROUND_OF_32", "ROUND_OF_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"];
+const KNOCKOUT_STAGES = ["LAST_32", "LAST_16", "ROUND_OF_32", "ROUND_OF_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"];
 
 export async function getKnockoutMatches(): Promise<Record<string, Fixture[]>> {
   try {

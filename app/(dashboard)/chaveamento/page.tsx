@@ -6,6 +6,8 @@ import type { Fixture } from "@/lib/football-api";
 export const revalidate = 300;
 
 const STAGE_ORDER = [
+  "LAST_32",
+  "LAST_16",
   "ROUND_OF_32",
   "ROUND_OF_16",
   "QUARTER_FINALS",
@@ -25,10 +27,12 @@ const STAGE_LABELS: Record<string, string> = {
 
 // WC 2026 tem 48 seleções, estrutura real:
 const STAGE_LABELS_WC2026: Record<string, string> = {
-  ROUND_OF_32: "Rodada de 32",
+  LAST_32: "16 Avos de Final",
+  LAST_16: "Oitavas de Final",
+  ROUND_OF_32: "16 Avos de Final",
   ROUND_OF_16: "Oitavas de Final",
   QUARTER_FINALS: "Quartas de Final",
-  SEMI_FINALS: "Semifinais",
+  SEMI_FINALS: "Semifinal",
   THIRD_PLACE: "3º Lugar",
   FINAL: "Final",
 };
