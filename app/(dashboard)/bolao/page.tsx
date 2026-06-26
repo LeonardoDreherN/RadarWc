@@ -79,21 +79,20 @@ export default async function BolaoPage() {
     }
   }
 
-  // Todos os usuários com palpites (inclusive 0 pts)
-  const allPickUserIds = Array.from(new Set(allPicks.map((p) => p.user_id)));
+  // Só monta ranking se alguém já pontuou
+  const scorers = Array.from(scoreMap.entries()).filter(([, pts]) => pts > 0);
+  let leaderboard: { uid: string; pts: number; name: string }[] = [];
 
-  let emailMap = new Map<string, string>();
-  if (allPickUserIds.length > 0) {
+  if (scorers.length > 0) {
     try {
       const { data: { users } } = await db.auth.admin.listUsers({ perPage: 500 });
-      emailMap = new Map(users.map((u) => [u.id, u.email?.split("@")[0] ?? "Usuário"]));
+      const emailMap = new Map(users.map((u) => [u.id, u.email?.split("@")[0] ?? "Usuário"]));
+      leaderboard = scorers
+        .map(([uid, pts]) => ({ uid, pts, name: emailMap.get(uid) ?? "Usuário" }))
+        .sort((a, b) => b.pts - a.pts)
+        .slice(0, 3);
     } catch {}
   }
-
-  const leaderboard = allPickUserIds
-    .map((uid) => ({ uid, pts: scoreMap.get(uid) ?? 0, name: emailMap.get(uid) ?? "Usuário" }))
-    .sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name))
-    .slice(0, 15);
 
   const myScore = scoreMap.get(userId ?? "") ?? 0;
   const myRank = leaderboard.findIndex((r) => r.uid === userId) + 1;
